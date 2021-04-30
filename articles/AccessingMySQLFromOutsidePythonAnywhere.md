@@ -87,27 +87,41 @@ If you're running Python code on your local machine, and you want it to access
 your MySQL database, you can install [the `sshtunnel` package](https://pypi.python.org/pypi/sshtunnel)
 and then use code like this:
 
-    import mysql.connector
+    import pymysql as mysqlConnector
     import sshtunnel
 
     sshtunnel.SSH_TIMEOUT = 5.0
     sshtunnel.TUNNEL_TIMEOUT = 5.0
+    # Helper functiont to execute query
+    def execute_query(conn, query):
+        cur = conn.cursor()
+        cur.execute(query)
+        print(cur.description)
+        print()
+        for row in cur:
+            print(row)
 
-    with sshtunnel.SSHTunnelForwarder(
-        ('your SSH hostname'),
-        ssh_username='your PythonAnywhere username', ssh_password='the password you use to log in to the PythonAnywhere website',
-        remote_bind_address=('your PythonAnywhere database hostname, eg. yourusername.mysql.pythonanywhere-services.com', 3306)
-    ) as tunnel:
-        connection = mysql.connector.connect(
-            user='your PythonAnywhere username', password='your PythonAnywhere database password',
-            host='127.0.0.1', port=tunnel.local_bind_port,
-            database='your database name, eg yourusername$mydatabase',
-        )
-        # Do stuff
-        connection.close()
 
-This example uses the `mysql-connector` library, but you can use any MySQL
-library you like.
+    def dbtest():
+        with sshtunnel.SSHTunnelForwarder(
+            ('your SSH hostname'),
+            ssh_username='your PythonAnywhere username', ssh_password='the password you use to log in to the PythonAnywhere website',
+            remote_bind_address=('your PythonAnywhere database hostname, eg. yourusername.mysql.pythonanywhere-services.com', 3306)
+        ) as tunnel:
+            print("SSH TUNNNEL UP")
+            connection = mysqlConnector.connect(
+                user='your PythonAnywhere username', password='your PythonAnywhere database password',
+                host='127.0.0.1', port=tunnel.local_bind_port,
+                database='your database name, eg yourusername$mydatabase',
+            )
+            print("CONNECTED to MYSQL")
+            tst_query="SHOW TABLES"
+            tst_query="SELECT * FROM accounts"
+            execute_query(conn=connection,query=tst_query)
+            # Do stuff
+            connection.close()
+
+This example uses the `PyMySQL` library, but you can use any MySQL library you like.
 
 If you have trouble with the SSH Tunnel connection, the project provides a
 helpful [troubleshooting guide](https://github.com/pahaz/sshtunnel/blob/master/Troubleshoot.rst)
